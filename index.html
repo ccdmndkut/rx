@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue CDN App</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <!-- Adding Google Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* Base styles using CSS variables */
+      :root {
+        --primary-bg-color: #1a1a1a;
+        --secondary-bg-color: #2f3640;
+        --input-bg-color: #353b48;
+        --primary-text-color: #f5f6fa;
+        --secondary-text-color: #2c3e50;
+        --border-color: #57606f;
+        --button-hover-bg-color: #7f8fa6;
+        --primary-font: "Roboto", sans-serif;
+      }
+
+      /* Reset and base styles */
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+        font-family: var(--primary-font);
+        background-color: var(--primary-bg-color);
+        color: var(--primary-text-color);
+      }
+
+      /* Typography */
+      h1,
+      h2,
+      .total-dose {
+        text-align: center;
+        font-weight: 300;
+      }
+
+      .total-dose {
+        font-size: 10vh;
+        min-height: 20vh;
+        font-weight: 500;
+        border: 2px solid var(--primary-text-color);
+        border-radius: 5px;
+        margin: 20px 0;
+        padding: 20px 0;
+      }
+
+      /* Flex containers */
+      .outer-container,
+      .input-container,
+      .total-dose {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .outer-container {
+        height: 100%;
+      }
+
+      .input-container {
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      /* Containers */
+      .container {
+        max-width: 600px;
+        width: 90%;
+        padding: 30px;
+        background-color: var(--secondary-bg-color);
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Form elements */
+      label,
+      input,
+      button {
+        font-size: 16px;
+      }
+
+      label {
+        margin-right: 20px;
+      }
+
+      input {
+        padding: 10px 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        outline: none;
+        flex-grow: 1;
+        margin-right: 20px;
+        background-color: var(--input-bg-color);
+        transition: border-color 0.3s;
+      }
+
+      input:focus {
+        border-color: var(--primary-text-color);
+      }
+
+      button {
+        background-color: var(--primary-text-color);
+        color: var(--secondary-bg-color);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: var(--button-hover-bg-color);
+      }
+
+      /* Responsive styles */
+      @media only screen and (max-width: 768px) {
+        .input-container {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        input {
+          margin-bottom: 15px;
+          margin-right: 0;
+        }
+
+        .total-dose {
+          font-size: 6vh;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <div class="outer-container">
+        <div class="container">
+          <div class="input-container">
+            <label for="time-input">Enter Time:</label>
+            <input
+              id="time-input"
+              v-model="inputValue"
+              @change="addTime"
+              placeholder="Enter time here..."
+            />
+            <button @click="resetTimes">Reset</button>
+          </div>
+          <div class="result-container">
+            <div class="total-dose">{{ totalDose }}</div>
+            <p v-for="time in times" :key="time" class="times">{{ time }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vue Script -->
+    <script>
+      new Vue({
+        el: "#app",
+        data() {
+          return {
+            times: [100, 150, 600],
+            inputValue: "",
+          };
+        },
+        computed: {
+          totalDose() {
+            return this.acumDose(this.times);
+          },
+        },
+        methods: {
+          resetTimes() {
+            this.times = [100, 150];
+          },
+          addTime() {
+            if (this.inputValue) {
+              this.times.push(Number(this.inputValue));
+              this.inputValue = "";
+            }
+          },
+          acumDose(timeArray) {
+            const HALF_LIFE = 8 * 60 * 60; // in seconds
+            const DOSE_AMOUNT = 50;
+            let accumulatedAmount = 0;
+            const now = new Date();
+            const currentTimeInSeconds =
+              now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+
+            timeArray.forEach((time) => {
+              const [hours, minutes] = [Math.floor(time / 100), time % 100];
+              const timeInSeconds = hours * 3600 + minutes * 60;
+              const timeDifferenceInSeconds =
+                currentTimeInSeconds - timeInSeconds;
+
+              if (timeDifferenceInSeconds < 0) return;
+
+              const remainingAmount =
+                DOSE_AMOUNT *
+                Math.pow(0.5, timeDifferenceInSeconds / HALF_LIFE);
+              accumulatedAmount += remainingAmount;
+            });
+            return accumulatedAmount.toFixed(2);
+          },
+        },
+        mounted() {
+          this.acumDose(this.times);
+          setInterval(() => this.acumDose(this.times), 1000);
+        },
+      });
+    </script>
+  </body>
+</html>
